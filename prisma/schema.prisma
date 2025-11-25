@@ -1,8 +1,8 @@
 generator client {
-  provider = "prisma-client"
+  provider = "prisma-client-js"
   // Output dipertahankan seperti yang Anda set, 
   // tetapi perhatikan bahwa ini membutuhkan konfigurasi path alias di tsconfig.json.
-  output   = "../lib/generated/prisma" 
+  // output   = "../lib/generated/prisma" 
 }
 
 datasource db {

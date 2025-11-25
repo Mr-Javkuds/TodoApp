@@ -1,0 +1,27 @@
+// .devcontainer/devcontainer.json
+
+{
+  "name": "TodoApp Development Environment",
+  
+  // Asumsi menggunakan Dockerfile atau image dasar
+  // "image": "mcr.microsoft.com/devcontainers/typescript-node:0-20", 
+  
+  // Tambahkan fitur di dalam objek "features"
+  "features": {
+    // Di sinilah Anda menaruh konfigurasi GitHub CLI
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+    
+    // Fitur lain (jika ada) ditaruh di sini, dipisahkan koma
+    // "ghcr.io/devcontainers/features/docker-in-docker:2": {} 
+  },
+  
+  // Konfigurasi lainnya...
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode"
+      ]
+    }
+  }
+}
