@@ -1,0 +1,114 @@
+generator client {
+  provider = "prisma-client"
+  // Output dipertahankan seperti yang Anda set, 
+  // tetapi perhatikan bahwa ini membutuhkan konfigurasi path alias di tsconfig.json.
+  output   = "../lib/generated/prisma" 
+}
+
+datasource db {
+  provider = "postgresql"
+  // Biasanya URL koneksi database ditambahkan di sini (dari environment variable)
+  // url      = env("DATABASE_URL") 
+}
+
+// 1. Perbaikan: Mengubah tipe ID untuk model relasi (Session & Account) 
+// agar sesuai dengan tipe ID yang digunakan di model User.
+
+model User {
+  // ID model User (Int)
+  id               Int       @id @default(autoincrement())
+  
+  email            String    @unique
+  password         String
+  name             String
+  emailVerified    Boolean   @default(false)
+  image            String?
+  
+  // Relasi
+  todos            Todo[]
+  // Relasi Session dan Account harus mereferensikan Int[] jika ID User adalah Int
+  sessions         Session[]
+  accounts         Account[]
+
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@map("user")
+}
+
+model Todo {
+  id        Int      @id @default(autoincrement())
+  title     String
+  completed Boolean  @default(false)
+  
+  // userId harus Int, sesuai dengan tipe ID User
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Session {
+  // 2. Perbaikan: ID Session harus menjadi Int jika mereferensikan User ID (Int), 
+  // ATAU, jika ID token string, userId harus Int. 
+  // Namun, karena User.id adalah Int, kita asumsikan userId adalah Int.
+  // Jika ini adalah skema untuk NextAuth, tipe ID User dan Session biasanya String, 
+  // tetapi karena User.id adalah Int, kita pertahankan userId Int.
+  id        String   @id @default(cuid()) // Mengganti Int menjadi String (UUID/CUID) untuk session token
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  
+  // userId: Mengubah tipe dari String ke Int (Agar sesuai dengan User.id)
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // @@unique([token]) tidak perlu karena sudah @unique di atas.
+  @@index([userId])
+  @@map("session")
+}
+
+model Account {
+  // 3. Perbaikan: ID Account (Biasanya String untuk provider ID, menggunakan CUID/UUID)
+  id                     String    @id @default(cuid())
+  accountId              String    @unique // Biasanya kombinasi providerId dan providerAccountId yang unik
+  providerId             String
+  
+  // userId: Mengubah tipe dari String ke Int (Agar sesuai dengan User.id)
+  userId                 Int
+  user                   User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  accessToken            String?
+  refreshToken           String?
+  idToken                String?
+  accessTokenExpiresAt   DateTime?
+  refreshTokenExpiresAt  DateTime?
+  scope                  String?
+  password               String? // Sepertinya tidak diperlukan jika ini skema OAuth/NextAuth
+  
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+
+  // Opsional: Menambahkan unique index gabungan jika menggunakan NextAuth/OAuth
+  @@unique([providerId, accountId])
+  @@index([userId])
+  @@map("account")
+}
+
+// 4. Perbaikan: ID Verification (menggunakan CUID/UUID)
+model Verification {
+  id         String   @id @default(cuid())
+  identifier String
+  values      String 
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([identifier, values]) // Membuat token unik untuk verifikasi
+  @@index([identifier])
+  @@map("verification")
+}
